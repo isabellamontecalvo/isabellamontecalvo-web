@@ -23,3 +23,11 @@ The heat map was chosen to represent my data to visualise point density and rela
 
 ### Critiques
 The map does well to show earthquake activity at a low zoom level, but becomes admittedly less helpful at a higher zoom level (larger scale). The heat map gets a bit too cluttered/congested at larger zoom levels, though you can still see the individual heat map points. A way that this map would be greatly improved would by switching to circles at a higher zoom level (a conceptual generalisation technique). As the user zooms into the heatmap, the points stop overlapping visually and it is no longer necessary to show their distribution and density. At this point, it would have been better to show the points themselves and allow viewers to explore the data interactively. I could have done this, though I was a bit short on time and it was difficult, so I didn’t manage to, but the general principle is outlined here: https://docs.mapbox.com/help/tutorials/make-a-heatmap-with-mapbox-gl-js/. I am also a bit disappointed that despite adjusting the properties of my heatmap, distinguishing the differences between magnitude points is very poor, eg. the difference between a 7.5 and 4.4 magnitude earthquake is minor on my heat map. Again, this could be improved by using circles as mentioned above.
+
+### Resources
+A list of resources that I am indebted to!
+* https://docs.mapbox.com/help/tutorials/studio-heatmap-tutorial/
+* https://docs.mapbox.com/mapbox-gl-js/example/heatmap-layer/
+* https://docs.mapbox.com/help/tutorials/make-a-heatmap-with-mapbox-gl-js/
+* https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-heatmap-visibility
+* https://github.com/UBC-GEOB472-Spring2020/tracyw04-web/tree/master/lab1
