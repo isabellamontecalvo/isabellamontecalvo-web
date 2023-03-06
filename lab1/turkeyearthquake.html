@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Earthquake Data USGS March 4 2023 past 30 days</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+    .map-overlay {
+        position: absolute;
+        font-family: sans-serif;
+        margin-bottom: 40px;
+        margin-left: 5px;
+        padding: 5px;
+        width: 80%;
+        font-size: 14px;
+        color: #0f0e0e;
+      border-radius: 3px;
+      }
+
+
+
+    .quake-info {
+  position: absolute;
+  font-family: sans-serif;
+  margin-top: 580px;
+  margin-left: 5px;
+  padding: 5px;
+  width: 30%;
+  border: 1px solid black;
+  font-size: 14px;
+  color: #222;
+  background-color: #fff;
+  border-radius: 3px;
+}
+
+
+
+
+  </style>
+</head>
+<body>
+
+  <div id='map'></div>
+  <div class='map-overlay' id='features'><h2>Earthquake Activity for the past 30 days starting March 4, 2023</h2>
+  <div id='pd'><p>Data provided by USGS</p></div></div>
+  <div class='quake-info'>
+    <div><strong>Magnitude:</strong> <span id='mag'></span></div>
+    <div><strong>Location:</strong> <span id='loc'></span></div>
+    <div><strong>Date:</strong> <span id='date'></span></div>
+  </div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaXNhYmVsbGFtb250ZWNhbHZvIiwiYSI6ImNsZXRqeW51dzAwbzQzcXRmdnR3cnE3a3EifQ.rJ7u9o56bPAut1NXzv0lCg';
+    const map = new mapboxgl.Map({
+      container: 'map', // Specify the container ID
+      style: 'mapbox://styles/isabellamontecalvo/cleuirzy1003201qgriybq6b0', // Specify which map style to use
+      center: [37.641323, 37.783745], // Specify the starting position [lng, lat]
+      zoom: 5 // Specify the starting zoom
+    });
+
+const magDisplay = document.getElementById('mag');
+const locDisplay = document.getElementById('loc');
+const dateDisplay = document.getElementById('date');
+
+map.on('load', () => {
+  map.addSource('earthquakes', {
+    type: 'geojson',
+    data: `https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime=2023-02-02%2000:00:00&endtime=2023-03-04%2023:59:59&minmagnitude=2.5&eventtype=earthquake&orderby=time`,
+    generateId: true // This ensures that all features have unique IDs
+  });
+
+
+ map.addLayer({
+  id: 'earthquakes-viz',
+  type: 'heatmap',
+  source: 'earthquakes',
+  maxzoom: 22,
+  paint: {
+    //'heatmap-color':["interpolate",["linear"],["heatmap-density"],0,"rgba(0, 0, 255, 0)",0.1,"royalblue",0.3,"cyan",0.5,"lime",0.7,"yellow",1,"red"],
+    //'heatmap-color': ['interpolate',['linear'],['heatmap-density'],0,'rgba(0, 0, 255, 0)',0.1,'#edf8fb',0.3,'#9ebcda',0.5,'#8c96c6',0.7,'#8856a7',1,'#810f7c'],
+    'heatmap-color': ['interpolate',['linear'],['heatmap-density'],0,'rgba(0, 0, 255, 0)',0.2,'#ffffb2',0.4,'#feb24c',0.6,'#fd8d3c',0.8,'#fc4e2a',1,'#e31a1c'],
+    'heatmap-intensity': ['interpolate',['linear'],['zoom'],0,1,22,5],
+    'heatmap-opacity': 0.75,
+    'heatmap-radius':[ 'interpolate',['linear'],['zoom'], 0, 10, 22, 40],
+    'heatmap-weight': //['interpolate', ['linear'], ['mag'], 2.5, 1, 7.8, 2]
+    {
+        property: 'mag',
+        type: 'exponential',
+        stops: [[2.5, 1], [7.8, 2]]
+    }
+    //['interpolate',['linear'],['get','mag'], 2.5, 1, 7.8, 100]
+
+  }
+});
+
+
+
+
+let quakeID = null;
+
+map.on('mousemove', 'earthquakes-viz', (event) => {
+  map.getCanvas().style.cursor = 'pointer';
+  // Set constants equal to the current feature's magnitude, location, and time
+  const quakeMagnitude = event.features[0].properties.mag;
+  const quakeLocation = event.features[0].properties.place;
+  const quakeDate = new Date(event.features[0].properties.time);
+
+  // Check whether features exist
+  if (event.features.length === 0) return;
+  // Display the magnitude, location, and time in the sidebar
+  magDisplay.textContent = quakeMagnitude;
+  locDisplay.textContent = quakeLocation;
+  dateDisplay.textContent = quakeDate;
+
+  // If quakeID for the hovered feature is not null,
+  // use removeFeatureState to reset to the default behavior
+  if (quakeID) {
+    map.removeFeatureState({
+      source: 'earthquakes',
+      id: quakeID
+    });
+  }
+
+  quakeID = event.features[0].id;
+
+  // When the mouse moves over the earthquakes-viz layer, update the
+  // feature state for the feature under the mouse
+  map.setFeatureState(
+    {
+      source: 'earthquakes',
+      id: quakeID
+    },
+    {
+      hover: true
+    }
+  );
+});
+
+
+
+});
+
+    
+
+  </script>
+
+</body>
+</html>       
