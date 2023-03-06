@@ -2,7 +2,7 @@
 
 This is the README file for my lab 1 project with information about the project including my reflective analysis.
 
-Link to map: 
+**Here is the link to my map:** https://isabellamontecalvo.github.io/isabellamontecalvo-web/lab1/earthquakes.html
 
 ### Data Choice
 On February 6, 2023, a powerful moment magnitude earthquake of 7.8 struck southern and central Turkey and northern and Western Syria. A series of strong tremors and aftershocks devastated the area, causing widespread damage and tens of thousands of fatalities (now up to 47,000). Two weeks later on February 20, 2023, an additional 6.3 magnitude earthquake hit southern Turkey, causing additional deaths and injuries ([World Vision, 2023](https://www.worldvision.org/disaster-relief-news-stories/2023-turkey-and-syria-earthquake-faqs)).
