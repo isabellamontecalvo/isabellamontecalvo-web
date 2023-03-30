@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Bike Theft changes over time with Mapbox GL JS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 20px;
+        line-height: 30px;
+      }
+
+      h2 {
+        font-size: 14px;
+        line-height: 20px;
+        margin-bottom: 10px;
+      }
+
+      h3 {
+        font-size: 16px;
+      }
+
+      p {
+        margin: 10px;
+      }
+
+      a {
+        text-decoration: none;
+        color: #ff3300;
+      }
+
+      #console {
+        position: absolute;
+        margin: 10px;
+        width: 240px;
+        background-color: white;
+        padding: 10px 20px;
+      }
+
+      .session {
+        margin-bottom: 20px;
+      }
+
+      .row {
+        height: 20px;
+        width: 100%;
+      }
+
+      .colors {
+        background: linear-gradient(
+          to right,
+          #2dc4b2,
+          #3bb3c3,
+          #669ec4,
+          #8b88b6,
+          #a2719b,
+          #aa5e79
+        );
+        margin-bottom: 5px;
+      }
+
+      .label {
+        width: 15%;
+        display: inline-block;
+        text-align: center;
+      }
+       /**
+      * Set rules for how the map overlays
+      * (information box and legend) will be displayed
+      * on the page. */
+      .map-overlay {
+        position: absolute;
+        bottom: 10;
+        right: 40;
+        background: #fff;
+        margin-right: 20px;
+        font-family: Arial, sans-serif;
+        overflow: auto;
+        border-radius: 3px;
+        margin-bottom: 30px;
+        margin-top: 5px;
+      }
+
+      #features {
+        padding: 5px;
+        top: 1000;
+        bottom: 600;
+        height: 200px;
+        margin-top: 250px;
+        width: 200px;
+      }
+
+      
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="console">
+      <h1>Bike thefts</h1>
+      <p>
+        Data:
+        <a
+          href="https://data.torontopolice.on.ca/datasets/TorontoPS::bicycle-thefts-open-data/about"
+          >Bike thefts in Toronto</a
+        >
+        from 2018-2022
+      </p>
+      <div class='map-overlay' id='features'>
+        <h2>Cost of Bike CAD</h2>
+        <div id="pd"><p>Hover over a point!</p></div>
+        </div>
+      <div class='session'>
+        <h2>Cost of Bike (CAD)</h2>
+        <div class='row colors'>
+        </div>
+        <div class='row labels'>
+          <div class='label'>0</div>
+          <div class='label'>200</div>
+          <div class='label'>400</div>
+          <div class='label'>600</div>
+          <div class='label'>800</div>
+          <div class='label'>1000+</div>
+        </div>
+      </div>
+     
+      <div class="session">
+        <h2>Hour: <label id="active-hour">12PM</label></h2>
+        <input
+          id="slider"
+          class="row"
+          type="range"
+          min="0"
+          max="23"
+          step="1"
+          value="12"
+        />
+      </div>
+      <div class="session">
+        <h2>Year</h2>
+        <div class="row" id="filters">
+          <input
+            id="all"
+            type="radio"
+            name="toggle"
+            value="all"
+            checked="checked"
+          />
+          <label for="all">All</label>
+          
+          <input id="2018" type="radio" name="toggle" value=2018 />
+          <label for="2018">2018</label>
+
+          <input id="2019" type="radio" name="toggle" value=2019 />
+          <label for="2019">2019</label>
+
+          <input id="2020" type="radio" name="toggle" value=2020 />
+          <label for="2020">2020</label>
+
+          <input id="2021" type="radio" name="toggle" value=2021 />
+          <label for="2021">2021</label>
+
+          <input id="2022" type="radio" name="toggle" value=2022 />
+          <label for="2022">2022</label>
+
+          
+        </div>
+        <!--
+        <div class='session'>
+          <h2>Day of the week</h2>
+          <div class='row' id='filters2'>
+            <input id='all' type='radio' name='toggle' value='all' checked='checked'>
+            <label for='all'>All</label>
+            <input id='weekday' type='radio' name='toggle' value='weekday'>
+            <label for='weekday'>Weekday</label>
+            <input id='weekend' type='radio' name='toggle' value='weekend'>
+            <label for='weekend'>Weekend</label>
+          </div>
+        </div> -->
+      </div>
+    </div>
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoiaXNhYmVsbGFtb250ZWNhbHZvIiwiYSI6ImNsZXRqeW51dzAwbzQzcXRmdnR3cnE3a3EifQ.rJ7u9o56bPAut1NXzv0lCg';
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [-79.379655, 43.709508],
+        zoom: 10
+      });
+
+      map.on('load', () => {
+        let filterHour = ['==', ['number', ['get', 'Occurrence_Hour']], 12];
+        let filterYear = ['!=', ['number', ['get', 'Occurrence_Year']], 2018];
+       //const filterHour = ['==', ['number', ['get', 'Occurrence_Hour']], 12];
+       //const filterYear = ['!=', ['number', ['get', 'Occurrence_Year']], 'placeholder'];
+
+        map.addLayer({
+          id: 'biketheft',
+          type: 'circle',
+          source: {
+            type: 'geojson',
+            data: 'https://raw.githubusercontent.com/isabellamontecalvo/isabellamontecalvo-web/main/lab2/Bicycle_Thefts%20(1).geojson' // replace this with the url of your own geojson
+          },
+         paint: {
+            'circle-radius': [
+              'interpolate',
+              ['linear'],
+              ['to-number', ['get', 'Cost_of_Bike']],
+              0,
+              2,
+              4,
+              8
+            ],
+            'circle-color': 
+            //'#ff3300',
+            [
+              'interpolate',
+              ['linear'],
+              ['to-number', ['get', 'Cost_of_Bike']],
+              0,
+              '#2DC4B2',
+              200,
+              '#3BB3C3',
+              400,
+              '#669EC4',
+              600,
+              '#8B88B6',
+              800,
+              '#A2719B',
+              1000,
+              '#AA5E79'
+            ],
+            'circle-opacity': 0.8
+          },
+          filter: ['all', filterHour, filterYear]
+          //filter: ['==', ['number', ['get', 'Occurrence_Hour']], 12]
+        });
+
+        // update hour filter when the slider is dragged
+        document.getElementById('slider').addEventListener('input', (event) => {
+          const hour = parseInt(event.target.value);
+          // update the map
+          filterHour = ['==', ['number', ['get', 'Occurrence_Hour']], hour];
+          map.setFilter('biketheft', ['all', filterHour, filterYear]);
+          //map.setFilter('biketheft', ['==', ['number', ['get', 'Occurrence_Hour']], hour]);
+
+          // converting 0-23 hour to AMPM format
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const hour12 = hour % 12 ? hour % 12 : 12;
+
+          // update text in the UI
+          document.getElementById('active-hour').innerText = hour12 + ampm;
+        });
+
+         document.getElementById('filters').addEventListener('change', (event) => {
+            const year = parseInt(event.target.value);
+            // update the map filter
+            if (year === 'all') {
+              filterYear = ['==', ['number', ['get', 'Occurrence_Year']], [2018,2019,2020,2021,2022]];
+            } else if (year === 2018) {
+              filterYear = [
+                'match',
+                ['get', 'Occurrence_Year'],
+                2018,
+                true,
+                false
+              ];
+            } else if (year === 2019) {
+              filterYear = [
+                'match',
+                ['get', 'Occurrence_Year'],
+                2019,
+                true,
+                false
+              ];
+            } else if (year === 2020) {
+              filterYear = [
+                'match',
+                ['get', 'Occurrence_Year'],
+                2020,
+                true,
+                false
+              ];
+            } else if (year === 2021) {
+              filterYear = [
+                'match',
+                ['get', 'Occurrence_Year'],
+                2021,
+                true,
+                false
+              ];
+            } else if (year === 2022) {
+              filterYear = [
+                'match',
+                ['get', 'Occurrence_Year'],
+                2022,
+                true,
+                false
+              ];
+            } else {
+              console.error('error');
+            }
+            map.setFilter('biketheft', ['all', filterHour, filterYear]);
+            //map.setFilter('biketheft', ['all', filterYear]);
+          }); 
+
+          /*document.getElementById('filters2').addEventListener('change', (event) => {
+            const day = event.target.value;
+            // update the map filter
+            if (day === 'all') {
+              filterDay = ['!=', ['string', ['get', 'Occurrence_DayOfWeek']], 'placeholder'];
+            } else if (day === 'weekday') {
+              filterDay = ['match', ['get', 'Occurrence_DayOfWeek'], ['Saturday', 'Sunday'], false, true];
+            } else if (day === 'weekend') {
+              filterDay = ['match', ['get', 'Occurrence_DayOfWeek'], ['Saturday', 'Sunday'], true, false];
+            } else {
+              console.log('error');
+            }
+            map.setFilter('biketheft', ['all', filterDay]);
+}); */
+            map.on('mousemove', (event) => {
+             const biketheftdata = map.queryRenderedFeatures(event.point, {
+               layers: ['biketheft']
+              });
+            document.getElementById('pd').innerHTML = biketheftdata.length
+                ? `<h3>${biketheftdata[0].properties.Cost_of_Bike}</h3>`
+                
+                : `<p>Hover over a point!</p>`;
+            });
+
+      });
+    </script>
+  </body>
+</html>
