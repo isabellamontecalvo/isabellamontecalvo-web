@@ -6,7 +6,7 @@ This is the README file for my Lab 2 project with information about the project 
 
 Here is the [raw data](https://data.torontopolice.on.ca/datasets/TorontoPS::bicycle-thefts-open-data/about) for my bike theft data provided by Toronto Police Service Public Safety Data Portal. **NOTE:** This data was updated on March 28, 2023, after I had started downloading and using the data, thus it may differ slightly. Regardless, the GEOJSON data I used is uploaded to this folder.
 
-You can see a screenshot of my map here where the pointer is showing a 7.5 magnitude earthquake:
+You can see a screenshot of my map here which shows bike thefts at 4pm in 2020. You can see Danforth Ave in the east that has a line of bicycles stolen of varying prices:
 ![alt text](https://isabellamontecalvo.github.io/isabellamontecalvo-web/lab2/Biketheftmap.png)
 
 
