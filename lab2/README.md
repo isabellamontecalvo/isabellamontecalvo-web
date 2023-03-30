@@ -1,6 +1,6 @@
 ## Welcome!
 
-This is the README file for my Lab 2 project with information about the project including my reflective analysis.
+This is the README file for my Lab 2 project: **A Comparison of Bike Thefts in Toronto** with information about the project including my reflective analysis.
 
 **Here is the link to my map:** https://isabellamontecalvo.github.io/isabellamontecalvo-web/lab2/index4.html
 
