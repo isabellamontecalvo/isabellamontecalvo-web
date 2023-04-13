@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <title>New Orleans Shelters</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+      body { 
+        margin: 0; 
+        padding: 0;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+      }
+      #map { 
+        position: absolute; 
+        top: 0; 
+        bottom: 0; 
+        width: 100%; 
+      }
+      h1 {
+        font-size: 20px;
+        line-height: 30px;
+    }
+
+    h2 {
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 10px;
+}
+
+a {
+  text-decoration: none;
+  color: #2dc4b2;
+}
+
+#console {
+  position: absolute;
+  width: 270px;
+  margin: 10px;
+  padding: 10px 20px;
+  background-color: white;
+}
+
+.session {
+  margin-bottom: 20px;
+}
+
+.row {
+  height: 12px;
+  width: 100%;
+}
+
+.colors {
+  background: linear-gradient(to right, #2dc4b2, #3bb3c3, #669ec4, #8b88b6, #a2719b, #aa5e79);
+  margin-bottom: 5px;
+}
+
+.label {
+  width: 15%;
+  display: inline-block;
+  text-align: center;
+}
+
+    </style>
+  </head>
+  <style>
+    .mapboxgl-popup {
+      max-width: 400px;
+      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    }
+  </style>
+  <body>
+    <div id='map'>
+    </div>
+    <div class="map-overlay" id="legend"></div>
+    <div id='console'>
+        <h1>New Orleans Shelters</h1>
+        <p>Data: <br><a href='https://ready.nola.gov/plan/hurricane/'> NOLA Ready Evacuspot Locator</a><br><a href='https://github.com/Evacuteer/evacuspots/blob/master/evacuspots.geojson'>Evacuspot GeoJSON</a>
+            <br><br><img src="green_bus.svg" width="20" height="20"> General Public EvacuSpots
+            <br><br><img src="purple_bus.svg" width="20" height="20"> Seniors EvacuSpots</p>
+
+  </div>
+    <script>
+      // The value for 'accessToken' begins with 'pk...'
+      mapboxgl.accessToken = 'pk.eyJ1IjoiaXNhYmVsbGFtb250ZWNhbHZvIiwiYSI6ImNsZXRqeW51dzAwbzQzcXRmdnR3cnE3a3EifQ.rJ7u9o56bPAut1NXzv0lCg';
+      const map = new mapboxgl.Map({
+        container: 'map',
+        // Replace YOUR_STYLE_URL with your style URL.
+        style: 'mapbox://styles/isabellamontecalvo/clgeff6ad003801o5mclyfwwc', 
+        center: [-90.05, 29.98],
+        pitch: 60, // pitch in degrees
+        //bearing: -60, // bearing in degrees
+        zoom: 11.4
+      });
+
+      map.on('load', () => {
+        map.addLayer({
+            id: 'flooding',
+            type:'fill',
+            source: {
+                type: 'geojson',
+                data: 'https://raw.githubusercontent.com/isabellamontecalvo/isabellamontecalvo-web/main/Hurricane_Katrina_Flooding_Extent_Inside_Levee_Protected_Areas%20(1).geojson'
+            },
+            layout: {'visibility': 'visible'},
+            paint: {
+            'fill-color': '#73B8EE',
+            'fill-opacity': 0.4
+            }
+        });
+        
+        map.addSource("shelters", {
+            "type": "geojson",
+            "data":{
+                "type": "FeatureCollection",
+                "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "description": "Caesars Superdome",
+                        "image": "https://wp.usatodaysports.com/wp-content/uploads/sites/90/2015/08/superdome7.jpg"
+                },
+                "geometry": {
+                        "coordinates": [
+                        -90.0811176904043,
+                        29.95102235287365
+                        ],
+                        "type": "Point"
+                }
+                },
+                {
+                "type": "Feature",
+                "properties": {
+                    "description": "Ernst N. Morial Convention Center"
+                },
+                "geometry": {
+                    "coordinates": [
+                    -90.06317783763443,
+                    29.939658012818185
+                    ],
+                    "type": "Point"
+                }
+                }
+            ]
+            }
+            });
+        
+
+      map.addLayer({
+        'id': 'places',
+        'type': 'circle',
+        'source': 'shelters',
+        'paint': {
+        'circle-color': '#4264fb',
+        'circle-radius': 6,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff'
+        }
+        });
+        
+        // Create a popup, but don't add it to the map yet.
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false
+            });
+            
+            map.on('mouseenter', 'places', (e) => {
+            // Change the cursor style as a UI indicator.
+            map.getCanvas().style.cursor = 'pointer';
+            
+            // Copy coordinates array.
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.description;
+            //const images = e.features[0].properties.image;
+            const picture = '<center><p><img src='+e.features[0].properties.image + "style='width:200px;height:300px;'></img></p></center>";
+            
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+            
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+            popup.setLngLat(coordinates)
+            .setHTML(description + picture)
+            //.setHTML('<b>'+ e.features[0].properties.title + '</b>' + e.features[0].properties.description + '<p><img src='+e.features[0].properties.image+'></img></p>')
+            .addTo(map);
+            });
+            
+            map.on('mouseleave', 'places', () => {
+            map.getCanvas().style.cursor = '';
+            popup.remove();
+            });
+            
+           
+  
+
+     
+
+    });
+
+     
+      
+    </script>
+  </body>
+</html>
